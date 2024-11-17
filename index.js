@@ -3,9 +3,13 @@ import axios from "axios";
 import mongoose from "mongoose";
 import { Signup } from "./models/signupModel.js";
 import bcrypt from "bcrypt";
+import cors from "cors";
+
 
 const app = express();
 const port = 3000;
+
+app.use(cors());
 
 app.use(express.json());
 
@@ -26,15 +30,15 @@ mongoose
 
 app.post('/signup', async (req, res) => {
     try {
-        const { name, username, password } = req.body;
+        const { name, email, password } = req.body;
         console.log(name);
-        console.log(username);
+        console.log(email);
         console.log(password);
     
     
         const hashedPassword = await bcrypt.hash(password, 10);
         
-        const newUser = new Signup({name, username, password: hashedPassword});
+        const newUser = new Signup({name, email, password: hashedPassword});
         await newUser.save();
         res.status(201).send('user resgister successfully');
     } catch (error) {
@@ -47,12 +51,12 @@ app.post('/signup', async (req, res) => {
 
 app.post('/login', async (req,res) => {
     try {
-        const {username, password} = req.body;
+        const {email, password} = req.body;
 
         // finding the user by username 
         
         
-        const user = await Signup.findOne({username});
+        const user = await Signup.findOne({email});
         if(!user){
         res.status(400).send("Error finding username or password, either it should be invalid. Try another one !");
         }
