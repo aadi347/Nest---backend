@@ -2,6 +2,7 @@ import express, { response } from "express";
 import axios from "axios";
 import mongoose from "mongoose";
 import { Signup } from "./models/signupModel.js";
+import { FlatRegistration } from "./models/FlatRegistrationModel.js";
 import bcrypt from "bcrypt";
 import cors from "cors";
 
@@ -75,5 +76,21 @@ app.post('/login', async (req,res) => {
     }
 });
 
+
+//Getting the data from the FlatRegistration FORM from the frontend
+
+app.post("/flatregistartion", async (req, res) => {
+    try {
+        const {flatType, rent, location, parking, utilities, houseName, deposit, carpetArea} = req.body;
+        console.log(flatType, rent, location, parking, utilities, houseName, deposit, carpetArea);
+    
+        const newproperty = new FlatRegistration({flatType, rent, location, parking, utilities, houseName, deposit, carpetArea});
+        await newproperty.save();
+        res.status(200).send("Property information saved succesfully");
+    } catch (error) {
+        console.log(error);
+        res.status(400).send("Error ! while saving the property information.")
+    }
+});
 
 
