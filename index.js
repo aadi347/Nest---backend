@@ -8,12 +8,18 @@ import cors from "cors";
 import session from "express-session";
 import passport from "passport";
 import { Strategy as LocalStrategy } from "passport-local";
+import multer from 'multer';
+import {cloudinary} from "./cloud/cloudinaryConfig.js";
+import fs from 'fs';
 
 const app = express();
 const port = 3000;
 
 // Middleware
-app.use(cors());
+app.use(cors({
+    origin: "http://localhost:5173",  
+    credentials: true                
+  }));
 app.use(express.json());
 
 // Session and Passport setup
@@ -26,6 +32,20 @@ app.use(
 );
 app.use(passport.initialize());
 app.use(passport.session());
+
+const upload = multer({ dest: 'uploads/' });
+
+const storage = new CloudinaryStorage({
+  cloudinary: cloudinary,
+  params: {
+    folder: 'uploads', // Folder in Cloudinary where images will be stored
+    allowed_formats: ['jpg', 'png', 'jpeg'], // Allowed image formats
+    transformation: [{ width: 500, height: 500, crop: 'limit' }],
+  },
+});
+
+const upload = multer({ storage });
+
 
 // MongoDB connection
 const mongoDbUrl =
@@ -120,5 +140,14 @@ app.post("/flatregistration", async (req, res) => {
   } catch (error) {
     console.error(error);
     res.status(400).send("Error saving property information");
+  }
+});
+
+
+app.post("/upload", upload.single('image'), (req, res) => {
+  try {
+    res.status(200).json({ message: 'Image uploaded successfully', imageUrl: req.file.path });
+  } catch (error) {
+    res.status(500).json({ message: 'Image upload failed', error });
   }
 });
