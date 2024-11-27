@@ -9,7 +9,7 @@ import session from "express-session";
 import passport from "passport";
 import { Strategy as LocalStrategy } from "passport-local";
 import multer from 'multer';
-import {cloudinary} from "./cloud/cloudinaryConfig.js";
+// import {cloudinary} from "./cloud/cloudinaryConfig.js";
 import fs from 'fs';
 
 const app = express();
@@ -33,18 +33,16 @@ app.use(
 app.use(passport.initialize());
 app.use(passport.session());
 
-const upload = multer({ dest: 'uploads/' });
+// const upload = multer({ dest: 'uploads/' });
 
-const storage = new CloudinaryStorage({
-  cloudinary: cloudinary,
-  params: {
-    folder: 'uploads', // Folder in Cloudinary where images will be stored
-    allowed_formats: ['jpg', 'png', 'jpeg'], // Allowed image formats
-    transformation: [{ width: 500, height: 500, crop: 'limit' }],
-  },
-});
-
-const upload = multer({ storage });
+// const storage = new CloudinaryStorage({
+//   cloudinary: cloudinary,
+//   params: {
+//     folder: 'uploads', // Folder in Cloudinary where images will be stored
+//     allowed_formats: ['jpg', 'png', 'jpeg'], // Allowed image formats
+//     transformation: [{ width: 500, height: 500, crop: 'limit' }],
+//   },
+// });
 
 
 // MongoDB connection
@@ -144,10 +142,41 @@ app.post("/flatregistration", async (req, res) => {
 });
 
 
-app.post("/upload", upload.single('image'), (req, res) => {
+// app.post("/upload", upload.single('image'), (req, res) => {
+//   try {
+//     res.status(200).json({ message: 'Image uploaded successfully', imageUrl: req.file.path });
+//   } catch (error) {
+//     res.status(500).json({ message: 'Image upload failed', error });
+//   }
+// });
+
+// getting all the property from database
+
+app.get('/flatregistration', async (req,res)=> {
   try {
-    res.status(200).json({ message: 'Image uploaded successfully', imageUrl: req.file.path });
+    const property = await FlatRegistration.find({});
+    return res.status(200).json(property);
   } catch (error) {
-    res.status(500).json({ message: 'Image upload failed', error });
+    res.status(500).send('Error getting the property information');
+  }
+})
+
+// getting the property one by one by id 
+
+app.get('/flatregistration/:id', async (req, res) => {
+  try {
+    const { id } = req.params;
+    if (!mongoose.Types.ObjectId.isValid(id)) {
+      return res.status(400).send('Invalid ObjectId');
+    }
+
+    const flat = await FlatRegistration.findById(id);
+    if (!flat) {
+      return res.status(404).send('Property not found');
+    }
+    return res.status(200).json(flat);
+  } catch (error) {
+    console.error(error);
+    res.status(500).send('Error getting the property information');
   }
 });
