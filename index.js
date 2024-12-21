@@ -180,3 +180,40 @@ app.get('/flatregistration/:id', async (req, res) => {
     res.status(500).send('Error getting the property information');
   }
 });
+
+
+// search property by location, flatType and rent
+
+app.post("/search", async (req, res) => {
+  try {
+    const { location, flatType, rent } = req.body;
+
+    const query = {};
+    if (location) query.location = location; 
+    if (flatType) query.flatType = flatType; 
+   
+    if (rent) {
+      if (rent === '10k-20k') {
+        query.rent = { $gte: 10000, $lte: 20000 }; 
+      } else if (rent === '20k-30k') {
+        query.rent = { $gte: 20000, $lte: 30000 }; 
+      } else if (rent === 'Above 30k') {
+        query.rent = { $gte: 30000 }; 
+      }
+    }
+
+   
+    const properties = await PropertyRegistration.find(query);
+
+ 
+    if (properties.length === 0) {
+      return res.status(404).json({ message: "No properties found matching the criteria." });
+    }
+
+    
+    res.status(200).json(properties);
+  } catch (error) {
+    console.error("Error fetching properties:", error);
+    res.status(500).send("Error fetching properties data");
+  }
+});
