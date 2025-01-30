@@ -9,6 +9,7 @@ import session from "express-session";
 import passport from "passport";
 import { Strategy as LocalStrategy } from "passport-local";
 import multer from 'multer';
+import {Account} from "./models/Account.js";
 // import {cloudinary} from "./cloud/cloudinaryConfig.js";
 import fs from 'fs';
 
@@ -97,19 +98,56 @@ passport.deserializeUser(async (id, done) => {
 app.post("/signup", async (req, res) => {
   try {
     const { name, email, password } = req.body;
+
+    // Validate the presence of required fields
+    if (!name || !email || !password) {
+      return res.status(400).send("Name, email, and password are required");
+    }
+
+    // Hash the password
     const hashedPassword = await bcrypt.hash(password, 10);
+
+    // Create and save the user
     const newUser = new Signup({ name, email, password: hashedPassword });
-    await newUser.save();
-    res.status(201).send("User registered successfully");
+    const savedUser = await newUser.save();
+
+    // Create a default account for the user
+    const newAccount = new Account({
+      userId: savedUser._id, // Link to the user
+      accountType: "Personal", // Default account type
+      details: { address: "", contactNumber: "" }, // Initialize with empty fields
+    });
+
+    // Save the account
+    await newAccount.save();
+
+    res.status(201).send("User and account created successfully");
   } catch (error) {
     console.error(error);
-    res.status(400).send("Error registering user");
+    res.status(500).send("Error registering user");
   }
 });
 
-app.post("/login", passport.authenticate("local"), (req, res) => {
-  res.status(200).send("Login successful");
+
+app.get("/account", async (req, res) => {
+  if (req.isAuthenticated()) {
+    try {
+      // Fetch the account associated with the logged-in user
+      const account = await Account.findOne({ userId: req.user._id });
+      if (!account) {
+        return res.status(404).send("Account not found");
+      }
+
+      res.status(200).json(account);
+    } catch (error) {
+      console.error(error);
+      res.status(500).send("Error fetching account details");
+    }
+  } else {
+    res.status(401).send("Not authenticated");
+  }
 });
+
 
 
 app.get("/user", (req, res) => {
