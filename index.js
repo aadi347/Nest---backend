@@ -2,8 +2,11 @@ import express from "express";
 import mongoose from "mongoose";
 import cors from "cors";
 import authRoutes from "./router/authRoutes.js";
+import blogRoutes from "./router/blogRoutes.js";
+import flatRoutes from "./router/flatRoutes.js";
 import session from "express-session";
 import passport from "passport";
+
 
 
 
@@ -24,6 +27,9 @@ app.use(cors({
 
 
 app.use("/api/auth", authRoutes);
+app.use("/api/blog", blogRoutes);
+app.use("/api/flats", flatRoutes);
+
 
 // setting up the db and port 
 
